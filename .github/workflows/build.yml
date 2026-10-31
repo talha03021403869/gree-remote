@@ -1,63 +1,33 @@
-name: Build Android APK
-on: [push, workflow_dispatch]
+
+name: Build Gree YT1F APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up JDK 17
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '17'
-          distribution: 'temurin'
 
-      - name: Extract Project Safely
+      - name: Build APK
         run: |
-          find . -name "*.zip" -exec unzip -q {} -d unzipped_dir \; || true
-          TARGET_DIR=$(find . -name "settings.gradle.kts" -o -name "settings.gradle" -exec dirname {} \; | head -n 1)
-          if [ -n "$TARGET_DIR" ] && [ "$TARGET_DIR" != "." ]; then
-            cp -r $TARGET_DIR/* . || true
-          fi
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
-      - name: Force Fix Manifest Error
-        run: |
-          # Pure project ke andar jahan bhi AndroidManifest.xml hai, usme se roundIcon ko mukammal khatam karo
-          find . -name "AndroidManifest.xml" | while read -r manifest; do
-            python3 -c "
-import xml.etree.ElementTree as ET
-ET.register_namespace('android', 'http://android.com')
-tree = ET.parse('$manifest')
-root = tree.getroot()
-for app in root.findall('application'):
-    if '{http://android.com}roundIcon' in app.attrib:
-        del app.attrib['{http://android.com}roundIcon']
-tree.write('$manifest', encoding='utf-8', xml_declaration=True)
-            "
-            echo "Fixed: $manifest"
-          done
-
-      - name: Make Gradle Executable
-        run: |
-          chmod +x gradlew || true
-          find . -name "gradlew" -exec chmod +x {} \; || true
-
-      - name: Build with Gradle
-        run: |
-          if [ -f "./gradlew" ]; then
-            ./gradlew assembleDebug --no-daemon
-          else
-            GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
-            if [ -n "$GRADLEW_PATH" ]; then
-              cd $(dirname $GRADLEW_PATH) && ./gradlew assembleDebug --no-daemon
-            else
-              gradle assembleDebug --no-daemon
-            fi
-          fi
-
-      - name: Upload APK File
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: "**/build/outputs/apk/debug/*.apk"
+          name: Gree-YT1F-APK
+          path: app/build/outputs/apk/debug/*.apk
           
