@@ -1,33 +1,44 @@
 
-name: Build Gree YT1F APK
+name: Build Android APK
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
+on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: '17'
+          distribution: temurin
+
+      - name: Unzip Android Project
+        run: unzip -o GreeYt1fRemote-AndroidStudio.zip -d extracted
+
+      - name: Find Gradle Wrapper
+        run: |
+          GRADLEW=$(find extracted -type f -name gradlew | head -n 1)
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: gradlew file not found in ZIP"
+            find extracted -maxdepth 4 -type f | head -100
+            exit 1
+          fi
+          PROJECT_DIR=$(dirname "$GRADLEW")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          chmod +x "$GRADLEW"
 
       - name: Build APK
         run: |
-          chmod +x gradlew
+          cd "$PROJECT_DIR"
           ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Gree-YT1F-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: extracted/**/app/build/outputs/apk/debug/*.apk
           
