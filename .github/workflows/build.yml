@@ -11,7 +11,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Unzip Project
-        run: unzip GreeYt1fRemote-AndroidStudio.zip -d .
+        run: |
+          unzip -q GreeYt1fRemote-AndroidStudio.zip -d extracted_project
+          # Find where settings.gradle.kts is and move everything to root
+          BUILD_DIR=$(find extracted_project -name "settings.gradle.kts" -exec dirname {} \;)
+          cp -r $BUILD_DIR/* .
       - name: Make Gradle Executable
         run: chmod +x gradlew
       - name: Build with Gradle
