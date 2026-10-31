@@ -11,7 +11,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
 
       - name: Extract Project Safely
         run: |
@@ -26,14 +25,14 @@ jobs:
           chmod +x gradlew || true
           find . -name "gradlew" -exec chmod +x {} \; || true
 
-      - name: Build with Gradle (Ignore Warnings)
+      - name: Build with Gradle
         run: |
           if [ -f "./gradlew" ]; then
-            ./gradlew assembleDebug --no-daemon --stacktrace
+            ./gradlew assembleDebug --no-daemon
           else
             GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
             if [ -n "$GRADLEW_PATH" ]; then
-              cd $(dirname $GRADLEW_PATH) && ./gradlew assembleDebug --no-daemon --stacktrace
+              cd $(dirname $GRADLEW_PATH) && ./gradlew assembleDebug --no-daemon
             else
               gradle assembleDebug --no-daemon
             fi
