@@ -20,6 +20,15 @@ jobs:
             cp -r $TARGET_DIR/* . || true
           fi
 
+      - name: Fix Missing Round Icon Error
+        run: |
+          # Find AndroidManifest.xml and remove the roundIcon reference that causes the crash
+          MANIFEST_PATH=$(find . -name "AndroidManifest.xml" | head -n 1)
+          if [ -n "$MANIFEST_PATH" ]; then
+            sed -i 's/android:roundIcon="[^"]*"//g' "$MANIFEST_PATH"
+            echo "Successfully fixed manifest round icon error."
+          fi
+
       - name: Make Gradle Executable
         run: |
           chmod +x gradlew || true
